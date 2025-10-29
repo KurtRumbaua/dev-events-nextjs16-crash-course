@@ -120,13 +120,32 @@ EventSchema.pre("save", function (next) {
       .replace(/\s+/g, "-") // Replace spaces with hyphens
       .replace(/-+/g, "-") // Replace multiple hyphens with single hyphen
       .replace(/^-+|-+$/g, ""); // Remove leading and trailing hyphens
+
+    // Fallback: if slug is empty (e.g., title was all special chars), use safe default
+    if (!this.slug || this.slug.trim() === "") {
+      const timestamp = Date.now().toString(36); // Base36 short timestamp
+      this.slug = `untitled-${timestamp}`;
+    }
   }
 
   // Normalize date to ISO format if modified
   if (this.isModified("date")) {
     const ymd = /^(\d{4})-(\d{2})-(\d{2})$/;
-    if (!ymd.test(this.date)) {
+    const match = this.date.match(ymd);
+    if (!match) {
       return next(new Error('Date must be "YYYY-MM-DD"'));
+    }
+
+    // Validate calendar date to prevent invalid dates like 2025-13-45 or 2025-02-30
+    const [, year, month, day] = match;
+    const dateObj = new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+    const isValid =
+      dateObj.getUTCFullYear() === parseInt(year) &&
+      dateObj.getUTCMonth() + 1 === parseInt(month) &&
+      dateObj.getUTCDate() === parseInt(day);
+
+    if (!isValid) {
+      return next(new Error("Date must be a valid calendar date"));
     }
   }
 
