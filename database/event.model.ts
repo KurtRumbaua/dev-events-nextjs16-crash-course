@@ -139,9 +139,6 @@ EventSchema.pre("save", function (next) {
   next();
 });
 
-// Create unique index on slug for fast lookups
-EventSchema.index({ slug: 1 });
-
 // Export model (use existing model if it exists to prevent recompilation errors)
 const Event = models.Event || model<IEvent>("Event", EventSchema);
 
