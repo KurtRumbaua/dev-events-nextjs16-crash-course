@@ -67,8 +67,12 @@ BookingSchema.pre("save", async function (next) {
 // Create index on eventId for faster queries (e.g., finding all bookings for an event)
 BookingSchema.index({ eventId: 1 });
 
-// Create compound index for efficient queries by event and email
-BookingSchema.index({ eventId: 1, email: 1 });
+// Enforce one booking per event per email (prevent duplicate bookings)
+// This is a domain rule: each user can only book an event once
+BookingSchema.index(
+  { eventId: 1, email: 1 },
+  { unique: true, name: "uniq_event_email" }
+);
 
 // Export model (use existing model if it exists to prevent recompilation errors)
 const Booking = models.Booking || model<IBooking>("Booking", BookingSchema);
