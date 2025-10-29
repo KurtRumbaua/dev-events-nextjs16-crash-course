@@ -7,12 +7,13 @@ type MongooseCache = {
 };
 
 // Extend the global namespace to include our mongoose cache
+// Using 'mongooseCache' to avoid collision with the imported 'mongoose'
 declare global {
-  var mongoose: MongooseCache | undefined;
+  var mongooseCache: MongooseCache | undefined;
 }
 
 // Get the MongoDB URI from environment variables
-const MONGODB_URI = process.env.MONGODB_URI!;
+const MONGODB_URI = process.env.MONGODB_URI;
 
 // Throw an error if the URI is not defined
 if (!MONGODB_URI) {
@@ -23,10 +24,13 @@ if (!MONGODB_URI) {
 
 // Initialize the cache on the global object to persist across hot reloads in development
 // In production, this will be initialized once when the server starts
-const cached: MongooseCache = global.mongoose || { conn: null, promise: null };
+const cached: MongooseCache = global.mongooseCache || {
+  conn: null,
+  promise: null,
+};
 
-if (!global.mongoose) {
-  global.mongoose = cached;
+if (!global.mongooseCache) {
+  global.mongooseCache = cached;
 }
 
 /**
@@ -35,6 +39,13 @@ if (!global.mongoose) {
  * @returns Promise that resolves to the Mongoose instance
  */
 async function connectToDatabase(): Promise<typeof mongoose> {
+  // Type guard: ensure MONGODB_URI is defined
+  if (!MONGODB_URI) {
+    throw new Error(
+      "Please define the MONGODB_URI environment variable inside .env"
+    );
+  }
+
   // If we already have a connection, return it immediately
   if (cached.conn) {
     return cached.conn;
@@ -43,8 +54,10 @@ async function connectToDatabase(): Promise<typeof mongoose> {
   // If there's no connection promise, create a new one
   if (!cached.promise) {
     const options = {
-      bufferCommands: false, // Disable buffering to fail fast if connection is down
-    };
+      bufferCommands: false, // Fail fast if disconnected
+      serverSelectionTimeoutMS: 5000, // Fast failover on connection issues
+      maxPoolSize: 10, // Reasonable pool size for development/production
+    } as const;
 
     // Create the connection promise and store it in the cache
     cached.promise = mongoose.connect(MONGODB_URI, options).then((mongoose) => {

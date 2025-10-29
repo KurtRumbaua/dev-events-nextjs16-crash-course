@@ -25,6 +25,7 @@ const BookingSchema = new Schema<IBooking>(
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
         "Please provide a valid email address",
       ],
+      set: (email: string) => email.toLowerCase().trim(),
     },
   },
   {
@@ -33,6 +34,8 @@ const BookingSchema = new Schema<IBooking>(
 );
 
 // Pre-save hook: Verify that the referenced Event exists
+// Note: This check is not atomic—Event could be deleted between verification and insert.
+// For strict transactional integrity, implement multi-document transactions at the application level.
 BookingSchema.pre("save", async function (next) {
   // Only check if eventId is new or modified
   if (this.isNew || this.isModified("eventId")) {

@@ -47,6 +47,10 @@ const EventSchema = new Schema<IEvent>(
     image: {
       type: String,
       required: [true, "Event image is required"],
+      match: [
+        /^(https?:\/\/.+|\/images\/.+)$/,
+        "Event image must be a valid URL or path (e.g., /images/event.png)",
+      ],
     },
     venue: {
       type: String,
@@ -84,6 +88,7 @@ const EventSchema = new Schema<IEvent>(
         validator: (v: string[]) => Array.isArray(v) && v.length > 0,
         message: "Agenda must contain at least one item",
       },
+      set: (v: string[]) => v.map((item) => item.trim()),
     },
     organizer: {
       type: String,
@@ -97,6 +102,7 @@ const EventSchema = new Schema<IEvent>(
         validator: (v: string[]) => Array.isArray(v) && v.length > 0,
         message: "At least one tag is required",
       },
+      set: (v: string[]) => v.map((tag) => tag.trim()),
     },
   },
   {
@@ -113,7 +119,7 @@ EventSchema.pre("save", function (next) {
       .replace(/[^\w\s-]/g, "") // Remove special characters
       .replace(/\s+/g, "-") // Replace spaces with hyphens
       .replace(/-+/g, "-") // Replace multiple hyphens with single hyphen
-      .trim();
+      .replace(/^-+|-+$/g, ""); // Remove leading and trailing hyphens
   }
 
   // Normalize date to ISO format if modified
