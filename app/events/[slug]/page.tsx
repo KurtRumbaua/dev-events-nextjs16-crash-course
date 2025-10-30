@@ -29,6 +29,16 @@ const EventAgenda = ({ agendaItems }: { agendaItems: string[] }) => (
   </div>
 );
 
+const EventTags = ({ tags }: { tags: string[] }) => (
+  <div className="flex flex-row gap-1.5 flex-wrap">
+    {tags.map((tag) => (
+      <div className="pill" key={tag}>
+        {tag}
+      </div>
+    ))}
+  </div>
+);
+
 const EventDetailsPage = async ({
   params,
 }: {
@@ -49,6 +59,7 @@ const EventDetailsPage = async ({
       agenda,
       audience,
       tags,
+      organizer,
     },
   } = await request.json();
 
@@ -86,27 +97,34 @@ const EventDetailsPage = async ({
             />
             <EventDetailItem
               icon="/icons/clock.svg"
-              alt="calendar"
+              alt="clock"
               label={`Time: ${time}`}
             />
             <EventDetailItem
               icon="/icons/pin.svg"
-              alt="calendar"
+              alt="location pin"
               label={`Venue: ${location}`}
             />
             <EventDetailItem
               icon="/icons/mode.svg"
-              alt="calendar"
+              alt="mode"
               label={`Mode: ${mode}`}
             />
             <EventDetailItem
               icon="/icons/audience.svg"
-              alt="calendar"
+              alt="audience"
               label={`Audience: ${audience}`}
             />
           </section>
 
           <EventAgenda agendaItems={agenda} />
+
+          <section className="flex-col-gap-2">
+            <h2>About the Organzier</h2>
+            <p>{organizer}</p>
+          </section>
+
+          <EventTags tags={tags} />
         </div>
 
         {/* Right Side - Booking Form */}
