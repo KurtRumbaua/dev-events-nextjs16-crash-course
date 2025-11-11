@@ -50,22 +50,34 @@ const EventDetailsPage = async ({
 }) => {
   const { slug } = await params;
   const request = await fetch(`${BASE_URL}/api/events/${slug}`);
+  if (!request.ok) {
+    if (request.status === 404) {
+      return notFound();
+    }
+    throw new Error(
+      `Failed to load event ${slug}: ${request.status} ${request.statusText}`
+    );
+  }
+
+  const payload = await request.json();
+  if (!payload?.event) {
+    return notFound();
+  }
+
   const {
-    event: {
-      title,
-      description,
-      image,
-      overview,
-      date,
-      time,
-      location,
-      mode,
-      agenda,
-      audience,
-      tags,
-      organizer,
-    },
-  } = await request.json();
+    title,
+    description,
+    image,
+    overview,
+    date,
+    time,
+    location,
+    mode,
+    agenda,
+    audience,
+    tags,
+    organizer,
+  } = payload.event;
 
   if (!description) return notFound();
 
