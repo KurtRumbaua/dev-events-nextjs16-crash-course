@@ -28,10 +28,6 @@ const configureCloudinary = () => {
     api_secret: apiSecret,
   });
 };
-
-// Initialize Cloudinary configuration
-configureCloudinary();
-
 export async function POST(req: NextRequest) {
   try {
     await connectToDatabase();
