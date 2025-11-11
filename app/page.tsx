@@ -1,10 +1,14 @@
 import EventCard from "@/components/EventCard";
 import ExploreBtn from "@/components/ExploreBtn";
 import { IEvent } from "@/database";
+import { cacheLife } from "next/cache";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 const Page = async () => {
+  "use cache";
+  cacheLife("hours");
+
   // Validate BASE_URL is present and non-empty
   if (!BASE_URL || BASE_URL.trim() === "") {
     console.error("BASE_URL environment variable is missing or empty");
@@ -69,7 +73,7 @@ const Page = async () => {
             {events &&
               events.length > 0 &&
               events.map((event: IEvent) => (
-                <li key={event.title}>
+                <li key={event.title} className="list-none">
                   <EventCard {...event} />
                 </li>
               ))}
